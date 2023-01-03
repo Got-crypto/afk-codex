@@ -1,5 +1,6 @@
 import bot from './assets/bot.svg'
 import user from './assets/user.svg'
+import axios from 'axios'
 
 const form = document.querySelector('form')
 const chatContainer = document.querySelector('#chat_container')
@@ -51,7 +52,7 @@ function chatStripe(isAi, value, uniqueId){
               alt="${isAi ? 'bot': 'user'}"
             />
           </div>
-          <div class='message' id=${uniqueId}></div>
+          <div class='message' id=${uniqueId}>${value}</div>
         </div>
       </div>
     
@@ -78,6 +79,35 @@ async function handleSubmit(e){
   const messageDiv = document.getElementById(uniqueId)
 
   loader(messageDiv)
+
+
+
+  const response = await fetch('http://localhost:5000', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      prompt: data.get('prompt')
+    })
+  })
+
+  clearInterval(loadInterval)
+  messageDiv.innerHTML = ""
+
+  if(response.ok) {
+    const data = await response.json()
+    const parsedData = data.bot.trim()
+
+
+    typeText(messageDiv, parsedData)
+  }else {
+    const err = await response.text()
+
+    messageDiv.innerHTML = "Something went wrong"
+
+    alert(err)
+  }
 }
 
 form.addEventListener('submit', handleSubmit)
